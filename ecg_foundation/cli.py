@@ -7,6 +7,7 @@ import json
 import sys
 from .models import FrontierPayload
 from .agents import ECGFoundationCoordinator
+from agents.base import AuditLogger
 
 coordinator = ECGFoundationCoordinator()
 
@@ -32,6 +33,9 @@ def main(argv=None):
     p_batch = subparsers.add_parser("batch", help="Batch process CSV records")
     p_batch.add_argument("-i", "--input", required=True)
     p_batch.add_argument("-o", "--output", default="results.csv")
+
+    # Verify audit
+    subparsers.add_parser("verify-audit", help="Verify HMAC-SHA256 audit trail integrity")
 
     # Serve
     p_serve = subparsers.add_parser("serve", help="Launch FastAPI REST server")
@@ -66,6 +70,14 @@ def main(argv=None):
     if args.command == "chat":
         ans = coordinator.query_supervisory_chat(" ".join(args.query))
         print(f"\n[ECGFoundationCoordinator]:\n{ans}\n")
+        return 0
+
+    if args.command == "verify-audit":
+        trail = AuditLogger.get_trail()
+        verified = AuditLogger.verify_integrity()
+        print(f"\n[HMAC-SHA256 Audit Trail Verification]")
+        print(f"  Total audit blocks: {len(trail)}")
+        print(f"  Integrity check: {'PASSED' if verified else 'FAILED'}")
         return 0
 
     if args.command == "batch":
