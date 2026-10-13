@@ -63,6 +63,7 @@ jobs:
         Path("/tmp/ecg-web-script.js").write_text("\\n".join(parser.parts), encoding="utf-8")
         PY
         node --check /tmp/ecg-web-script.js
+        node tests/browser_smoke.cjs
 
     - name: Docker and HTTP smoke test
       if: matrix.python-version == '3.12'
