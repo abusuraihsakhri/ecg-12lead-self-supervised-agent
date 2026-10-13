@@ -14,7 +14,7 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Ecg 12Lead Self Supervised Agent API",
-    description="Enterprise Distributed Component Platform (Cardiology & Intensive Care Systems)",
+    description="Demonstration threshold audit and ECG reference console; no waveform self-supervision or clinical decision engine",
     version="3.0.0-ENTERPRISE",
 )
 
@@ -35,7 +35,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "ecg-12lead-self-supervised-agent", "domain": "Cardiology & Intensive Care Systems", "standard": "AHA/ACC Guidelines / Surviving Sepsis Campaign", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "ecg-12lead-self-supervised-agent", "domain": "Cardiology & Intensive Care Systems", "standard": "Demonstration rules only", "version": "3.0.0-ENTERPRISE"}
 
 
 @app.get("/metrics")
