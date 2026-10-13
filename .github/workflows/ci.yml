@@ -29,6 +29,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e . pytest httpx2
 
+    - name: Check dependencies for known vulnerabilities
+      run: |
+        python -m pip install pip-audit
+        pip-audit
+
     - name: Compile Python sources
       run: python -m compileall -q agents ecg_foundation cli.py ecg_interpretation.py enrichment.py
 
