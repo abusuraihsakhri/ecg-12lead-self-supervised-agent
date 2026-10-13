@@ -59,6 +59,8 @@ class AuditTrail:
     def __init__(self, secret_key: Optional[str] = None):
         resolved_key = secret_key or os.getenv("AUDIT_SECRET_KEY")
         if not resolved_key:
+            if os.getenv("ECG_ENV", "").lower() in ("production", "prod"):
+                raise RuntimeError("AUDIT_SECRET_KEY must be set in production")
             import warnings
             warnings.warn(
                 "AUDIT_SECRET_KEY not set. Using development-only fallback. "
@@ -71,8 +73,9 @@ class AuditTrail:
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
-        payload_str = json.dumps(details, sort_keys=True)
-        assert_no_phi(payload_str)
+        payload_str = json.dumps(details, sort_keys=True, allow_nan=False)
+        for field in (actor, actor_tier, event_type, payload_str):
+            assert_no_phi(field)
         payload_hash = hashlib.sha256(payload_str.encode("utf-8")).hexdigest()
         audit_id = f"AUDIT-{int(time.time()*1000)}-{len(self.logs)+1}"
         ts = datetime.now(timezone.utc).isoformat()
@@ -93,14 +96,25 @@ class AuditTrail:
         return entry
 
     def verify_integrity(self) -> bool:
-        for i, entry in enumerate(self.logs):
-            prev = self.logs[i-1]["current_hash"] if i > 0 else "GENESIS_BLOCK_0000000000000000"
-            if entry["prev_hash"] != prev:
+        """Verify both the chain links and every HMAC signature."""
+        previous = "GENESIS_BLOCK_0000000000000000"
+        required = ("audit_id", "timestamp", "actor", "actor_tier",
+                    "event_type", "payload_hash", "prev_hash", "current_hash")
+        for entry in self.logs:
+            if not all(isinstance(entry.get(field), str) for field in required):
                 return False
+            if not hmac.compare_digest(entry["prev_hash"], previous):
+                return False
+            signed = "|".join(entry[field] for field in required[:-1])
+            expected = hmac.new(self.secret_key, signed.encode("utf-8"), hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(entry["current_hash"], expected):
+                return False
+            previous = entry["current_hash"]
         return True
 
     def get_trail(self) -> List[Dict[str, Any]]:
-        return self.logs
+        """Return a snapshot, not mutable internal audit entries."""
+        return [entry.copy() for entry in self.logs]
 
 
 GLOBAL_AUDIT = AuditTrail()

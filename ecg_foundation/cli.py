@@ -12,6 +12,18 @@ from agents.base import AuditLogger
 coordinator = ECGFoundationCoordinator()
 
 
+def parse_bool(value):
+    """Parse common CSV boolean forms without treating "False" as truthy."""
+    if isinstance(value, bool):
+        return value
+    normalized = str(value).strip().lower()
+    if normalized in ("true", "1", "yes", "y"):
+        return True
+    if normalized in ("false", "0", "no", "n", ""):
+        return False
+    raise ValueError(f"Invalid is_critical_flag boolean: {value!r}")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="ecg-12lead-self-supervised-agent", description="ECG-Foundation: 12-Lead Contrastive Masked Waveform Model Agent")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -56,7 +68,7 @@ def main(argv=None):
         dossier = coordinator.process(payload)
         print("=" * 80)
         print(f"  ECG-FOUNDATION: 12-LEAD CONTRASTIVE MASKED WAVEFORM MODEL AGENT")
-        print(f"  Domain: Cardiology AI | Standard: AHA / MIT-BIH ECG Data Standards")
+        print(f"  Domain: Cardiology AI | Standard: demonstration threshold rules (not ECG standards)")
         print(f"  Task: {dossier['task_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
@@ -86,17 +98,23 @@ def main(argv=None):
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
+        required = {"task_id", "target_identifier", "primary_metric", "secondary_metric", "is_critical_flag", "status_descriptor"}
+        if not required.issubset(fieldnames):
+            raise ValueError("CSV must contain columns: " + ", ".join(sorted(required)))
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]))
         out_rows = []
-        for r in rows:
-            payload = FrontierPayload(
+        for row_number, r in enumerate(rows, start=2):
+            try:
+                payload = FrontierPayload(
                 task_id=r.get("task_id", "TASK-01"),
                 target_identifier=r.get("target_identifier", "TARGET-01"),
                 primary_metric=float(r.get("primary_metric", 15.0)),
                 secondary_metric=float(r.get("secondary_metric", 5.0)),
                 status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
-            )
+                is_critical_flag=parse_bool(r.get("is_critical_flag", False)),
+                )
+            except (ValueError, TypeError) as exc:
+                raise ValueError(f"Invalid CSV data in row {row_number}: {exc}") from exc
             dossier = coordinator.process(payload)
             row_dict = dict(r)
             row_dict["overall_status"] = dossier["overall_status"]

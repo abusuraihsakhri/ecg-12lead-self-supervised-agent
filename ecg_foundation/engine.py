@@ -1,7 +1,7 @@
 """
 Core Algorithmic Engine & Cryptographic / Biological Logic for ECG-Foundation: 12-Lead Contrastive Masked Waveform Model Agent.
 Domain: Cardiology AI
-Standard: AHA / MIT-BIH ECG Data Standards
+Standard: demonstration threshold rules (not ECG standards)
 """
 import math
 from typing import Dict, Any, List, Optional
@@ -9,7 +9,7 @@ from .models import FrontierPayload, AgentTelemetryAlert, ExecutionStatus
 
 
 class FrontierDomainEngine:
-    STANDARD = "AHA / MIT-BIH ECG Data Standards"
+    STANDARD = "demonstration threshold rules (not ECG standards)"
     PRIMARY_BOUND = 25.0
     SECONDARY_BOUND = 10.0
 
@@ -18,7 +18,7 @@ class FrontierDomainEngine:
         if value > cls.PRIMARY_BOUND:
             return {
                 "summary": "Primary Domain Boundary Deviation",
-                "details": f"Parameter value ({value:.3f}) exceeds operational threshold ({cls.PRIMARY_BOUND:.1f}) under AHA / MIT-BIH ECG Data Standards.",
+                "details": f"Parameter value ({value:.3f}) exceeds operational threshold ({cls.PRIMARY_BOUND:.1f}) under demonstration threshold rules (not ECG standards).",
                 "remediation": "Engage parameter recalibration and algorithmic verification routine.",
             }
         return None
@@ -39,7 +39,7 @@ class FrontierDomainEngine:
         if any(flag in desc_upper for flag in ["VIOLATION", "DISCORDANT", "ANOMALY", "MUTANT", "LEAK"]):
             return {
                 "summary": "Specification / Protocol Anomaly Identified",
-                "details": f"Telemetry status flag '{descriptor}' violates AHA / MIT-BIH ECG Data Standards conformance matrix.",
+                "details": f"Telemetry status flag '{descriptor}' violates demonstration threshold rules (not ECG standards) conformance matrix.",
                 "remediation": "Execute automated rollback or secondary consensus verification.",
             }
         return None

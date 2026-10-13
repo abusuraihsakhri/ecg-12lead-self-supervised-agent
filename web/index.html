@@ -1,236 +1,167 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ecg 12Lead Self Supervised Engine — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>12-Lead ECG Reference Tools</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, sans-serif; color-scheme: dark; background:#0c1220; color:#e8eef7; }
+    * { box-sizing:border-box; }
+    body { max-width:1100px; margin:auto; padding:clamp(16px,3vw,36px); line-height:1.5; }
+    h1 { font-size:clamp(1.6rem,3vw,2.2rem); margin:0; }
+    h2 { font-size:1.12rem; margin:0 0 14px; }
+    p { color:#bdc8d9; margin:.5rem 0 1rem; }
+    .eyebrow { font-size:.78rem; text-transform:uppercase; letter-spacing:.12em; color:#8db5fa; font-weight:700; }
+    .notice { border-left:3px solid #edbb62; padding:10px 14px; background:#252130; margin:20px 0; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+    .card { background:#151f32; border:1px solid #32415b; border-radius:12px; padding:22px; min-width:0; }
+    .full { grid-column:1/-1; }
+    label { display:block; font-size:.9rem; font-weight:600; margin:12px 0 4px; color:#d9e4f4; }
+    input, select { display:block; width:100%; border-radius:7px; padding:10px 12px; background:#0b1425; color:#fff; border:1px solid #52637c; font:inherit; }
+    input:focus-visible, select:focus-visible, button:focus-visible { outline:3px solid #81b5ff; outline-offset:2px; }
+    button { background:#387bd9; color:white; border:0; border-radius:7px; padding:11px 16px; cursor:pointer; font:inherit; font-weight:700; margin-top:16px; }
+    button:disabled { cursor:not-allowed; opacity:.55; }
+    .result { display:block; background:#0b1425; border-radius:7px; border:1px solid #334661; padding:14px; min-height:58px; margin-top:12px; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .muted { color:#b1bed0; font-size:.88rem; }
+    .fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 14px; }
+    .status { display:inline-block; border-radius:20px; background:#293345; padding:3px 12px; margin-left:8px; font-size:.8rem; }
+    .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+    @media (max-width:720px) { .grid { grid-template-columns:1fr; } .fields { grid-template-columns:1fr; } }
+  </style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Ecg 12Lead Self Supervised Engine</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
+  <header>
+    <div class="eyebrow">ECG reference • educational / research use</div>
+    <h1>12-Lead ECG Reference Tools</h1>
+    <p>Local QT correction and frontal-plane QRS axis calculations. No ECG waveform model or diagnostic classifier runs in this page.</p>
+  </header>
+  <div class="notice" role="note"><strong>Not for clinical diagnosis or emergency decisions.</strong> Measurements must be checked by a qualified clinician. The simplified calculations cannot establish rhythm, acute coronary occlusion, or a treatment recommendation.</div>
+  <main class="grid">
+    <section class="card">
+      <h2>QTc calculator</h2>
+      <form id="qtc-form">
+        <div class="fields">
+          <div><label for="qt">Measured QT (ms)</label><input id="qt" type="number" required min="1" max="2000" step="any" value="400"></div>
+          <div><label for="rr">RR interval (seconds)</label><input id="rr" type="number" required min="0.01" max="20" step="any" value="0.8"></div>
         </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
+        <button type="submit">Calculate QTc</button>
+        <output class="result" id="qtc-result" aria-live="polite">Enter QT and RR, then calculate.</output>
+      </form>
+      <p class="muted">Bazett = QT / √RR; Fridericia = QT / RR^(1/3); Framingham = QT + 154 × (1 − RR). RR is in seconds and QT is in milliseconds.</p>
+    </section>
+    <section class="card">
+      <h2>Frontal QRS axis</h2>
+      <form id="axis-form">
+        <div class="fields">
+          <div><label for="lead-i">Net QRS amplitude, I</label><input id="lead-i" type="number" required step="any" value="8"></div>
+          <div><label for="lead-avf">Net QRS amplitude, aVF</label><input id="lead-avf" type="number" required step="any" value="6"></div>
         </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
+        <button type="submit">Estimate axis</button>
+        <output class="result" id="axis-result" aria-live="polite">Enter net QRS amplitudes, then calculate.</output>
+      </form>
+      <p class="muted">Axis = atan2(aVF, I), expressed in degrees. This is a simplified net-amplitude estimate, not a comprehensive vectorcardiographic assessment.</p>
+    </section>
+    <section class="card full">
+      <h2>Backend audit console <span class="status" id="connection">Checking</span></h2>
+      <p>This optional generic threshold-audit service requires the Python/FastAPI server. It does not interpret raw 12-lead waveforms. Use synthetic records only; the identifier screen is heuristic and does not guarantee de-identification.</p>
+      <form id="audit-form">
+        <div class="fields">
+          <div><label for="task-id">Task ID (synthetic)</label><input id="task-id" required maxlength="100" value="TASK-DEMO-01"></div>
+          <div><label for="target-id">Target ID (synthetic)</label><input id="target-id" required maxlength="100" value="ECG-DEMO-01"></div>
+          <div><label for="primary">Primary metric (arbitrary units)</label><input id="primary" type="number" required step="any" value="29.4"></div>
+          <div><label for="secondary">Secondary metric (arbitrary units)</label><input id="secondary" type="number" required step="any" value="14.8"></div>
+          <div><label for="descriptor">Descriptor</label><input id="descriptor" required maxlength="100" value="DISCORDANT_ANOMALY"></div>
+          <div><label for="critical">Critical flag</label><select id="critical"><option value="false">False</option><option value="true">True</option></select></div>
         </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Ecg 12Lead Self Supervised Engine Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "ecg-12lead-self-supervised-engine",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
+        <button id="audit-button" type="submit" disabled>Submit backend audit</button>
+      </form>
+      <pre class="result" id="audit-result" aria-live="polite">No backend audit submitted.</pre>
+      <p class="muted" id="metrics">Backend metrics unavailable.</p>
+    </section>
+  </main>
+  <script>
+    "use strict";
+    function number(id) {
+      const value = Number(document.getElementById(id).value);
+      if (!Number.isFinite(value)) throw new Error("All measurements must be finite numbers.");
+      return value;
+    }
+    const format = v => v.toFixed(1);
+    document.getElementById("qtc-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const output = document.getElementById("qtc-result");
+      try {
+        const qt = number("qt"), rr = number("rr");
+        if (qt <= 0 || rr <= 0) throw new Error("QT and RR must be positive.");
+        output.textContent = "Bazett: " + format(qt / Math.sqrt(rr)) + " ms\n" +
+          "Fridericia: " + format(qt / Math.cbrt(rr)) + " ms\n" +
+          "Framingham: " + format(qt + 154 * (1 - rr)) + " ms\n" +
+          "Heart rate: " + format(60 / rr) + " bpm";
+      } catch (error) { output.textContent = error.message; }
+    });
+    document.getElementById("axis-form").addEventListener("submit", event => {
+      event.preventDefault();
+      const output = document.getElementById("axis-result");
+      try {
+        const i = number("lead-i"), avf = number("lead-avf");
+        if (i === 0 && avf === 0) throw new Error("Axis is undefined when both amplitudes are zero.");
+        const axis = Math.atan2(avf, i) * 180 / Math.PI;
+        const classification = axis >= -30 && axis <= 90 ? "Normal" :
+          axis > -90 && axis < -30 ? "Left axis deviation" :
+          axis > 90 ? "Right axis deviation" : "Extreme axis deviation";
+        output.textContent = "Estimated QRS axis: " + format(axis) + "°\nClassification: " + classification;
+      } catch (error) { output.textContent = error.message; }
+    });
+    const staticHosting = location.hostname.endsWith(".github.io");
+    const auditButton = document.getElementById("audit-button");
+    async function checkBackend() {
+      if (staticHosting) {
+        document.getElementById("connection").textContent = "Unavailable on GitHub Pages";
+        return;
+      }
+      try {
+        const response = await fetch("/health", {cache:"no-store"});
+        if (!response.ok) throw new Error("Health endpoint unavailable");
+        const health = await response.json();
+        if (health.status !== "HEALTHY") throw new Error("Unexpected service response");
+        document.getElementById("connection").textContent = "Connected";
+        auditButton.disabled = false;
+        const metrics = await fetch("/metrics", {cache:"no-store"});
+        if (metrics.ok) {
+          const data = await metrics.json();
+          document.getElementById("metrics").textContent = "Tasks processed: " + data.dossiers_processed_total +
+            " • Audit blocks: " + data.audit_blocks_total + " • Status: " + data.system_status;
         }
-    </script>
+      } catch (error) {
+        auditButton.disabled = true;
+        document.getElementById("connection").textContent = "Backend offline";
+      }
+    }
+    document.getElementById("audit-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      if (staticHosting || auditButton.disabled) return;
+      const output = document.getElementById("audit-result");
+      auditButton.disabled = true;
+      output.textContent = "Sending synthetic audit record…";
+      try {
+        const payload = {
+          task_id: document.getElementById("task-id").value,
+          target_identifier: document.getElementById("target-id").value,
+          primary_metric: number("primary"),
+          secondary_metric: number("secondary"),
+          status_descriptor: document.getElementById("descriptor").value,
+          is_critical_flag: document.getElementById("critical").value === "true"
+        };
+        const response = await fetch("/api/audit", {method:"POST",
+          headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
+        const data = await response.json();
+        if (!response.ok) throw new Error("API " + response.status + ": " + (typeof data.detail === "string" ? data.detail : "Audit rejected"));
+        output.textContent = JSON.stringify(data, null, 2);
+      } catch (error) { output.textContent = "Audit did not complete: " + error.message; }
+      finally { auditButton.disabled = false; checkBackend(); }
+    });
+    checkBackend();
+  </script>
 </body>
 </html>

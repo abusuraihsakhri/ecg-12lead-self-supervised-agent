@@ -15,7 +15,7 @@ def create_app():
 
         app = FastAPI(
             title="ECG-Foundation: 12-Lead Contrastive Masked Waveform Model Agent",
-            description="Applies masked autoencoding across 12-lead voltage signals (500Hz), extracting latent embeddings for rhythm classification.",
+            description="Evaluates generic demonstration thresholds; no waveform autoencoder or rhythm classifier is implemented.",
             version="2.0.0-FRONTIER",
         )
 

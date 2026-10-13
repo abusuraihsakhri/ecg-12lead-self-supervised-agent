@@ -3,20 +3,25 @@ FROM python:3.12-slim
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    ECG_ENV=production
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml .
-RUN pip install --no-cache-dir fastapi uvicorn pydantic pytest
+RUN pip install --no-cache-dir --upgrade "setuptools>=83.0.0" && \
+    pip install --no-cache-dir "fastapi>=0.111,<1" "uvicorn>=0.30,<1" "pydantic>=2,<3"
 
 COPY . .
+
+RUN useradd --create-home --shell /usr/sbin/nologin ecguser && chown -R ecguser:ecguser /app
+USER ecguser
 
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-CMD ["python", "cli.py", "serve", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "agents.api:app", "--host", "0.0.0.0", "--port", "8000"]
