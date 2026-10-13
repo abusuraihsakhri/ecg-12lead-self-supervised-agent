@@ -101,3 +101,14 @@ def test_prod_requires_audit_secret(monkeypatch):
     monkeypatch.delenv("AUDIT_SECRET_KEY", raising=False)
     with pytest.raises(RuntimeError, match="AUDIT_SECRET_KEY"):
         AuditTrail()
+
+
+def test_nonadjacent_anterior_leads_do_not_meet_screen():
+    result = check_st_elevation({"V1": 3.0, "V4": 3.0})
+    assert result["stemi_detected"] is False
+
+
+def test_no_posterior_or_rv_diagnosis_from_v1_v2_elevation():
+    result = check_st_elevation({"V1": 3.0, "V2": 3.0})
+    labels = {territory["territory"] for territory in result["territories"]}
+    assert labels == {"anterior"}
