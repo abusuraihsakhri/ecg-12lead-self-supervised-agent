@@ -13,15 +13,18 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Topic :: Security/Cryptography",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 requires-python = ">=3.9"
-dependencies = []
+dependencies = [
+    "fastapi>=0.111,<1",
+    "pydantic>=2,<3",
+    "uvicorn>=0.30,<1",
+]
 
 [project.scripts]
 ecg-12lead-self-supervised-engine = "ecg_foundation.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/abusuraihsakhri/ecg-12lead-self-supervised-engine"
-Repository = "https://github.com/abusuraihsakhri/ecg-12lead-self-supervised-engine.git"
+Homepage = "https://github.com/abusuraihsakhri/ecg-12lead-self-supervised-agent"
+Repository = "https://github.com/abusuraihsakhri/ecg-12lead-self-supervised-agent"
