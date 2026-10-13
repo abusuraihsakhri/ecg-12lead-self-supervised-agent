@@ -1,7 +1,7 @@
 """
 Data Models & Telemetry Definitions for ECG-Foundation: 12-Lead Contrastive Masked Waveform Model Agent.
 Domain: Cardiology AI
-Standard: AHA / MIT-BIH ECG Data Standards
+Standard: demonstration threshold rules (not ECG standards)
 """
 import datetime
 from dataclasses import dataclass, field
@@ -35,7 +35,7 @@ class AgentTelemetryAlert:
     summary: str
     technical_details: str
     actionable_remediation: str
-    standard_reference: str = "AHA / MIT-BIH ECG Data Standards"
+    standard_reference: str = "demonstration threshold rules (not ECG standards)"
     timestamp: str = field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
 
     def to_dict(self) -> Dict[str, Any]:
