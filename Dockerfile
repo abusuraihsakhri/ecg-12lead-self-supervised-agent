@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir "fastapi>=0.111,<1" "uvicorn>=0.30,<1" "pydantic>
 
 COPY . .
 
+RUN useradd --create-home --shell /usr/sbin/nologin ecguser && chown -R ecguser:ecguser /app
+USER ecguser
+
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
