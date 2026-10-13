@@ -28,3 +28,7 @@ ecg-12lead-self-supervised-engine = "ecg_foundation.cli:main"
 [project.urls]
 Homepage = "https://github.com/abusuraihsakhri/ecg-12lead-self-supervised-agent"
 Repository = "https://github.com/abusuraihsakhri/ecg-12lead-self-supervised-agent"
+
+[tool.setuptools]
+packages = ["agents", "ecg_foundation"]
+py-modules = ["ecg_interpretation", "enrichment", "simulator", "cli", "ecg_foundation_app"]
