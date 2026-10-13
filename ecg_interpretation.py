@@ -123,6 +123,15 @@ LEAD_INFO = {
 ALL_LEADS = ["I", "II", "III", "aVR", "aVL", "aVF", "V1", "V2", "V3", "V4", "V5", "V6"]
 
 
+def _canonical_lead(lead_name: str) -> str:
+    """Return the conventional lead spelling (including aVR/aVL/aVF)."""
+    for lead in ALL_LEADS:
+        if lead.upper() == str(lead_name).strip().upper():
+            return lead
+    raise ValueError(f"Unknown ECG lead: {lead_name!r}")
+
+
+
 # =============================================================================
 # NORMAL INTERVAL RANGES
 # =============================================================================
@@ -328,10 +337,10 @@ def calculate_qtc_bazett(qt_ms: float, rr_seconds: float) -> float:
     Returns:
         QTc in milliseconds
     """
-    if rr_seconds <= 0:
-        raise ValueError("RR interval must be positive")
-    if qt_ms <= 0:
-        raise ValueError("QT interval must be positive")
+    if not math.isfinite(rr_seconds) or rr_seconds <= 0:
+        raise ValueError("RR interval must be finite and positive")
+    if not math.isfinite(qt_ms) or qt_ms <= 0:
+        raise ValueError("QT interval must be finite and positive")
     return qt_ms / math.sqrt(rr_seconds)
 
 
@@ -348,10 +357,10 @@ def calculate_qtc_fridericia(qt_ms: float, rr_seconds: float) -> float:
     Returns:
         QTc in milliseconds
     """
-    if rr_seconds <= 0:
-        raise ValueError("RR interval must be positive")
-    if qt_ms <= 0:
-        raise ValueError("QT interval must be positive")
+    if not math.isfinite(rr_seconds) or rr_seconds <= 0:
+        raise ValueError("RR interval must be finite and positive")
+    if not math.isfinite(qt_ms) or qt_ms <= 0:
+        raise ValueError("QT interval must be finite and positive")
     return qt_ms / (rr_seconds ** (1.0 / 3.0))
 
 
@@ -368,22 +377,22 @@ def calculate_qtc_framingham(qt_ms: float, rr_seconds: float) -> float:
     Returns:
         QTc in milliseconds
     """
-    if rr_seconds <= 0:
-        raise ValueError("RR interval must be positive")
+    if not math.isfinite(rr_seconds) or rr_seconds <= 0 or not math.isfinite(qt_ms) or qt_ms <= 0:
+        raise ValueError("QT and RR intervals must be finite and positive")
     return qt_ms + 154.0 * (1.0 - rr_seconds)
 
 
 def hr_from_rr(rr_seconds: float) -> float:
     """Convert RR interval in seconds to heart rate in bpm."""
-    if rr_seconds <= 0:
-        raise ValueError("RR interval must be positive")
+    if not math.isfinite(rr_seconds) or rr_seconds <= 0:
+        raise ValueError("RR interval must be finite and positive")
     return 60.0 / rr_seconds
 
 
 def rr_from_hr(hr_bpm: float) -> float:
     """Convert heart rate in bpm to RR interval in seconds."""
-    if hr_bpm <= 0:
-        raise ValueError("Heart rate must be positive")
+    if not math.isfinite(hr_bpm) or hr_bpm <= 0:
+        raise ValueError("Heart rate must be finite and positive")
     return 60.0 / hr_bpm
 
 
@@ -401,6 +410,10 @@ def calculate_axis_from_leads(lead_i_amplitude: float, lead_avf_amplitude: float
     Returns:
         Frontal plane axis in degrees (-180 to +180)
     """
+    if not all(math.isfinite(v) for v in (lead_i_amplitude, lead_avf_amplitude)):
+        raise ValueError("Lead amplitudes must be finite")
+    if lead_i_amplitude == 0 and lead_avf_amplitude == 0:
+        raise ValueError("QRS axis is undefined when both amplitudes are zero")
     axis_rad = math.atan2(lead_avf_amplitude, lead_i_amplitude)
     axis_deg = math.degrees(axis_rad)
     return round(axis_deg, 1)
@@ -421,11 +434,10 @@ def classify_axis(axis_degrees: float) -> Dict[str, Any]:
     Returns:
         Dictionary with axis classification and clinical significance
     """
-    # Normalize to -180 to +180
-    while axis_degrees > 180:
-        axis_degrees -= 360
-    while axis_degrees < -180:
-        axis_degrees += 360
+    if not math.isfinite(axis_degrees):
+        raise ValueError("Axis must be finite")
+    # Normalize in constant time for arbitrarily large angles.
+    axis_degrees = (axis_degrees + 180) % 360 - 180
 
     if -30 <= axis_degrees <= 90:
         classification = "Normal axis"
@@ -479,6 +491,10 @@ def check_intervals(
     sex = sex.lower()
     if sex not in ("male", "female"):
         raise ValueError("sex must be 'male' or 'female'")
+
+    for name, value in (("PR", pr_ms), ("QRS", qrs_ms), ("QT", qt_ms), ("RR", rr_seconds)):
+        if value is not None and (not math.isfinite(value) or value <= 0):
+            raise ValueError(f"{name} interval must be finite and positive")
 
     results = {"abnormalities": [], "intervals": {}}
 
@@ -539,7 +555,7 @@ def check_intervals(
         results["intervals"]["qt"] = qt_info
 
         # QTc if RR available
-        if rr_seconds is not None and rr_seconds > 0:
+        if rr_seconds is not None:
             qtc_bazett = calculate_qtc_bazett(qt_ms, rr_seconds)
             max_qtc = 450 if sex == "male" else 460
             qtc_info = {
@@ -592,10 +608,12 @@ def check_st_elevation(
         Dictionary with STEMI analysis
     """
     elevated_leads = []
+    if not all(math.isfinite(x) and x > 0 for x in (threshold_standard_mm, threshold_v1_v3_mm)):
+        raise ValueError("ST elevation thresholds must be finite and positive")
     for lead, elevation in st_elevations.items():
-        lead_upper = lead.upper()
-        if lead_upper not in ALL_LEADS:
-            continue
+        lead_upper = _canonical_lead(lead)
+        if not math.isfinite(elevation):
+            raise ValueError(f"ST elevation for {lead} must be finite")
         # Determine threshold
         if lead_upper in ("V1", "V2", "V3"):
             threshold = threshold_v1_v3_mm
@@ -647,7 +665,7 @@ def check_st_elevation(
         "territories": territories_involved,
         "num_elevated_leads": len(elevated_leads),
         "clinical_action": (
-            "ACTIVATE CATH LAB - emergent PCI within 90 minutes"
+            "Possible STEMI pattern: urgent clinical assessment; activate cath lab / PCI per local protocol if confirmed"
             if stemi_detected
             else "ST elevation does not meet STEMI criteria by standard thresholds"
         ),
@@ -676,6 +694,8 @@ def check_bundle_branch_block(
     Returns:
         Dictionary with BBB analysis
     """
+    if not math.isfinite(qrs_ms) or qrs_ms <= 0:
+        raise ValueError("QRS duration must be finite and positive")
     result = {
         "qrs_ms": qrs_ms,
         "qrs_widened": qrs_ms >= 120,
@@ -717,12 +737,12 @@ def check_bundle_branch_block(
         lbbb_details.append("No Q waves in I/V5-V6")
 
     if qrs_ms >= 120:
-        if rbbb_score >= 2 and rbbb_score >= lbbb_score:
+        if rbbb_score >= 2 and lead_v1_pattern in ("rsr", "rsR") and rbbb_score >= lbbb_score:
             result["rbbb_criteria_met"] = True
             result["criteria_details"] = rbbb_details
             result["diagnosis"] = "Right Bundle Branch Block (RBBB)"
             result["clinical_significance"] = BBB_CRITERIA["RBBB"]["clinical_significance"]
-        elif lbbb_score >= 2:
+        elif lbbb_score >= 2 and (lead_i_pattern == "broadNotchedR" or lead_v5_v6_pattern == "broadNotchedR"):
             result["lbbb_criteria_met"] = True
             result["criteria_details"] = lbbb_details
             result["diagnosis"] = "Left Bundle Branch Block (LBBB)"
@@ -734,7 +754,7 @@ def check_bundle_branch_block(
         if rbbb_score >= 1:
             result["diagnosis"] = "Incomplete Right Bundle Branch Block"
             result["criteria_details"] = rbbb_details
-        elif lbbb_score >= 1:
+        elif lead_i_pattern == "broadNotchedR" or lead_v5_v6_pattern == "broadNotchedR":
             result["diagnosis"] = "Incomplete Left Bundle Branch Block"
             result["criteria_details"] = lbbb_details
 
@@ -785,9 +805,9 @@ def interpret_ecg(
         interpretation["analysis"]["heart_rate"] = round(hr, 1)
         interpretation["analysis"]["rr_seconds"] = rr_seconds
         if hr > 100:
-            interpretation["findings"].append(f"Sinus tachycardia (HR {hr:.0f} bpm)")
+            interpretation["findings"].append(f"Tachycardia by RR interval (HR {hr:.0f} bpm; rhythm not established)")
         elif hr < 60:
-            interpretation["findings"].append(f"Sinus bradycardia (HR {hr:.0f} bpm)")
+            interpretation["findings"].append(f"Bradycardia by RR interval (HR {hr:.0f} bpm; rhythm not established)")
 
     # Axis analysis
     if lead_i_amplitude is not None and lead_avf_amplitude is not None:
@@ -835,10 +855,7 @@ def interpret_ecg(
 
 def get_lead_info(lead_name: str) -> Dict[str, Any]:
     """Get placement and anatomical information for a specific lead."""
-    lead_upper = lead_name.upper()
-    if lead_upper not in LEAD_INFO:
-        raise ValueError(f"Unknown lead: {lead_name}. Valid leads: {', '.join(ALL_LEADS)}")
-    return LEAD_INFO[lead_upper]
+    return LEAD_INFO[_canonical_lead(lead_name)]
 
 
 def get_all_lead_info() -> Dict[str, Dict[str, Any]]:
