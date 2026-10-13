@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY pyproject.toml .
-RUN pip install --no-cache-dir "fastapi>=0.111,<1" "uvicorn>=0.30,<1" "pydantic>=2,<3"
+RUN pip install --no-cache-dir --upgrade "setuptools>=83.0.0" && \
+    pip install --no-cache-dir "fastapi>=0.111,<1" "uvicorn>=0.30,<1" "pydantic>=2,<3"
 
 COPY . .
 
