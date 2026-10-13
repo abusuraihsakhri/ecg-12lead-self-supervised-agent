@@ -68,7 +68,7 @@ def main(argv=None):
         dossier = coordinator.process(payload)
         print("=" * 80)
         print(f"  ECG-FOUNDATION: 12-LEAD CONTRASTIVE MASKED WAVEFORM MODEL AGENT")
-        print(f"  Domain: Cardiology AI | Standard: AHA / MIT-BIH ECG Data Standards")
+        print(f"  Domain: Cardiology AI | Standard: demonstration threshold rules (not ECG standards)")
         print(f"  Task: {dossier['task_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
