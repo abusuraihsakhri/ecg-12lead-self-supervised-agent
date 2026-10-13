@@ -202,8 +202,7 @@ STEMI_TERRITORIES = {
         "artery_full": "Left anterior descending artery (proximal to mid)",
         "description": "Anterior STEMI",
         "contiguous_pairs": [
-            ("V1", "V2"), ("V1", "V3"), ("V1", "V4"),
-            ("V2", "V3"), ("V2", "V4"), ("V3", "V4"),
+            ("V1", "V2"), ("V2", "V3"), ("V3", "V4"),
         ],
         "associated_findings": [
             "Reciprocal ST depression in inferior leads (II, III, aVF)",
@@ -631,6 +630,11 @@ def check_st_elevation(
     elevated_lead_names = {el["lead"] for el in elevated_leads}
 
     for territory_name, territory in STEMI_TERRITORIES.items():
+        # Posterior infarction is suspected from reciprocal depression and
+        # right-ventricular involvement needs right-sided leads (e.g. V4R).
+        # Neither can be inferred from positive ST elevation in V1-V4 alone.
+        if territory_name in ("posterior", "right_ventricular"):
+            continue
         for pair in territory["contiguous_pairs"]:
             if pair[0] in elevated_lead_names and pair[1] in elevated_lead_names:
                 contiguous_pairs_found.append({
@@ -737,12 +741,12 @@ def check_bundle_branch_block(
         lbbb_details.append("No Q waves in I/V5-V6")
 
     if qrs_ms >= 120:
-        if rbbb_score >= 2 and lead_v1_pattern in ("rsr", "rsR") and rbbb_score >= lbbb_score:
+        if rbbb_score >= 3 and lead_v1_pattern in ("rsr", "rsR") and rbbb_score >= lbbb_score:
             result["rbbb_criteria_met"] = True
             result["criteria_details"] = rbbb_details
             result["diagnosis"] = "Right Bundle Branch Block (RBBB)"
             result["clinical_significance"] = BBB_CRITERIA["RBBB"]["clinical_significance"]
-        elif lbbb_score >= 2 and (lead_i_pattern == "broadNotchedR" or lead_v5_v6_pattern == "broadNotchedR"):
+        elif lbbb_score >= 3 and (lead_i_pattern == "broadNotchedR" or lead_v5_v6_pattern == "broadNotchedR"):
             result["lbbb_criteria_met"] = True
             result["criteria_details"] = lbbb_details
             result["diagnosis"] = "Left Bundle Branch Block (LBBB)"
